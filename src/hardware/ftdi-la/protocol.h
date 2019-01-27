@@ -54,6 +54,9 @@ struct dev_context {
 	uint64_t samples_sent;
 	uint64_t bytes_received;
 
+    gboolean trigger_fired;
+    struct soft_trigger_logic *stl;
+
     enum acquisition_mode mode;
 };
 
