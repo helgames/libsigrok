@@ -37,6 +37,14 @@ static const uint32_t devopts[] = {
 	SR_CONF_LIMIT_SAMPLES | SR_CONF_SET,
 	SR_CONF_SAMPLERATE | SR_CONF_GET | SR_CONF_SET | SR_CONF_LIST,
 	SR_CONF_CONN | SR_CONF_GET,
+    SR_CONF_DATA_SOURCE | SR_CONF_GET | SR_CONF_SET | SR_CONF_LIST,
+};
+
+/* Do not change the order of entries */
+static const char *acquisition_modes[] = {
+    "BitBang",
+    "Async FIFO",
+    "Sync FIFO (reqires RD#)",
 };
 
 static const uint64_t samplerates[] = {
@@ -336,6 +344,9 @@ static int config_get(uint32_t key, GVariant **data,
 		usb = sdi->conn;
 		*data = g_variant_new_printf("%d.%d", usb->bus, usb->address);
 		break;
+    case SR_CONF_DATA_SOURCE:
+        *data = g_variant_new_string(acquisition_modes[devc->mode]);
+        break;
 	default:
 		return SR_ERR_NA;
 	}
@@ -348,6 +359,7 @@ static int config_set(uint32_t key, GVariant *data,
 {
 	struct dev_context *devc;
 	uint64_t value;
+    const char *tmp_str;
 
 	(void)cg;
 
@@ -368,6 +380,21 @@ static int config_set(uint32_t key, GVariant *data,
 			return SR_ERR_SAMPLERATE;
 		devc->cur_samplerate = value;
 		return ftdi_la_set_samplerate(devc);
+    case SR_CONF_DATA_SOURCE:
+        tmp_str = g_variant_get_string(data, NULL);
+        devc->mode = ACQUISITION_MODE_COUNT;
+        for (enum acquisition_mode m = ACQUISITION_MODE_BB; m < ACQUISITION_MODE_COUNT; ++m) {
+            if (!strcmp(tmp_str, acquisition_modes[m])) {
+                devc->mode = m;
+                break;
+            }
+        }
+
+        if (devc->mode == ACQUISITION_MODE_COUNT) {
+            sr_err("Unknown acquisition mode: '%s'.", tmp_str);
+            return SR_ERR;
+        }
+        break;
 	default:
 		return SR_ERR_NA;
 	}
@@ -385,6 +412,9 @@ static int config_list(uint32_t key, GVariant **data,
 	case SR_CONF_SAMPLERATE:
 		*data = std_gvar_samplerates_steps(ARRAY_AND_SIZE(samplerates));
 		break;
+    case SR_CONF_DATA_SOURCE:
+        *data = g_variant_new_strv(ARRAY_AND_SIZE(acquisition_modes));
+        break;
 	default:
 		return SR_ERR_NA;
 	}
@@ -401,7 +431,19 @@ static int dev_acquisition_start(const struct sr_dev_inst *sdi)
 	if (!devc->ftdic)
 		return SR_ERR_BUG;
 
-	ftdi_set_bitmode(devc->ftdic, 0, BITMODE_BITBANG);
+    switch (devc->mode) {
+    case ACQUISITION_MODE_BB:
+        ftdi_set_bitmode(devc->ftdic, 0x00, BITMODE_BITBANG);
+        break;
+    case ACQUISITION_MODE_ASYNC_FF:
+        ftdi_set_bitmode(devc->ftdic, 0x00, BITMODE_RESET);
+        break;
+    case ACQUISITION_MODE_SYNC_FF:
+        ftdi_set_bitmode(devc->ftdic, 0x00, BITMODE_SYNCFF);
+        break;
+    default:
+        return SR_ERR_NA;
+    }
 
 	/* Properly reset internal variables before every new acquisition. */
 	devc->samples_sent = 0;
