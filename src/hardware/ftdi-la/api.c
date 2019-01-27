@@ -459,6 +459,7 @@ static int dev_acquisition_start(const struct sr_dev_inst *sdi)
 	if (!devc->ftdic)
 		return SR_ERR_BUG;
 
+    ftdi_usb_purge_buffers(devc->ftdic);
     ftdi_set_bitmode(devc->ftdic, 0x00, BITMODE_RESET);
 
     switch (devc->mode) {
@@ -471,6 +472,8 @@ static int dev_acquisition_start(const struct sr_dev_inst *sdi)
     default:
         return SR_ERR_NA;
     }
+
+    ftdi_la_set_samplerate(devc);
 
 	/* Properly reset internal variables before every new acquisition. */
 	devc->samples_sent = 0;
