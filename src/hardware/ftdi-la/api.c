@@ -68,7 +68,7 @@ static const uint64_t samplerates[] = {
     SR_MHZ(5),
     SR_MHZ(10),
     SR_MHZ(15),
-    SR_MHZ(30),
+    SR_MHZ(30)
 };
 
 static const struct ftdi_chip_desc ft2232h_desc = {
@@ -435,7 +435,7 @@ static int config_list(uint32_t key, GVariant **data,
 	case SR_CONF_DEVICE_OPTIONS:
 		return STD_CONFIG_LIST(key, data, sdi, cg, scanopts, drvopts, devopts);
 	case SR_CONF_SAMPLERATE:
-		*data = std_gvar_samplerates_steps(ARRAY_AND_SIZE(samplerates));
+		*data = std_gvar_samplerates(ARRAY_AND_SIZE(samplerates));
 		break;
     case SR_CONF_TRIGGER_MATCH:
         *data = std_gvar_array_i32(ARRAY_AND_SIZE(trigger_matches));
