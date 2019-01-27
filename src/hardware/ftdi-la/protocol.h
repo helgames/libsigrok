@@ -36,6 +36,13 @@ struct ftdi_chip_desc {
 	char *channel_names[];
 };
 
+enum acquisition_mode {
+    ACQUISITION_MODE_BB,
+    ACQUISITION_MODE_ASYNC_FF,
+    ACQUISITION_MODE_SYNC_FF,
+    ACQUISITION_MODE_COUNT
+};
+
 struct dev_context {
 	struct ftdi_context *ftdic;
 	const struct ftdi_chip_desc *desc;
@@ -46,6 +53,8 @@ struct dev_context {
 	unsigned char *data_buf;
 	uint64_t samples_sent;
 	uint64_t bytes_received;
+
+    enum acquisition_mode mode;
 };
 
 SR_PRIV int ftdi_la_set_samplerate(struct dev_context *devc);
