@@ -36,6 +36,7 @@ static void send_samples(struct sr_dev_inst *sdi, uint64_t samples_to_send)
 	struct sr_datafeed_packet packet;
 	struct sr_datafeed_logic logic;
 	struct dev_context *devc;
+    const int unitsize = 1;
 
 	sr_spew("Sending %" PRIu64 " samples.", samples_to_send);
 
@@ -43,12 +44,35 @@ static void send_samples(struct sr_dev_inst *sdi, uint64_t samples_to_send)
 
 	packet.type = SR_DF_LOGIC;
 	packet.payload = &logic;
-	logic.length = samples_to_send;
-	logic.unitsize = 1;
-	logic.data = devc->data_buf;
-	sr_session_send(sdi, &packet);
 
-	devc->samples_sent += samples_to_send;
+    if(devc->trigger_fired)
+    {
+        logic.length = samples_to_send;
+        logic.unitsize = unitsize;
+        logic.data = devc->data_buf;
+        sr_session_send(sdi, &packet);
+        devc->samples_sent += samples_to_send;
+    }
+    else
+    {
+        int pre_trigger_samples;
+        int trigger_offset = soft_trigger_logic_check(devc->stl, devc->data_buf, samples_to_send, &pre_trigger_samples);
+        if (trigger_offset > -1) {
+            devc->samples_sent += pre_trigger_samples;
+            unsigned int num_samples = (samples_to_send / unitsize) - trigger_offset;
+            if (devc->limit_samples && num_samples > devc->limit_samples - devc->samples_sent) {
+                num_samples = devc->limit_samples - devc->samples_sent;
+            }
+
+            logic.length = num_samples * unitsize;
+            logic.unitsize = unitsize;
+            logic.data = (uint8_t *)devc->data_buf + trigger_offset * unitsize;
+
+            devc->samples_sent += num_samples;
+            devc->trigger_fired = TRUE;
+        }
+    }
+
 	devc->bytes_received -= samples_to_send;
 }
 

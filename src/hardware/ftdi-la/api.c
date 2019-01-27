@@ -36,6 +36,7 @@ static const uint32_t devopts[] = {
 	SR_CONF_CONTINUOUS,
 	SR_CONF_LIMIT_SAMPLES | SR_CONF_SET,
 	SR_CONF_SAMPLERATE | SR_CONF_GET | SR_CONF_SET | SR_CONF_LIST,
+    SR_CONF_TRIGGER_MATCH | SR_CONF_LIST,
 	SR_CONF_CONN | SR_CONF_GET,
     SR_CONF_CAPTURE_RATIO | SR_CONF_GET | SR_CONF_SET,
     SR_CONF_DATA_SOURCE | SR_CONF_GET | SR_CONF_SET | SR_CONF_LIST,
@@ -46,6 +47,14 @@ static const char *acquisition_modes[] = {
     "BitBang",
     "Async FIFO",
     "Sync FIFO (reqires RD#)",
+};
+
+static const int32_t trigger_matches[] = {
+    SR_TRIGGER_ZERO,
+    SR_TRIGGER_ONE,
+    SR_TRIGGER_RISING,
+    SR_TRIGGER_FALLING,
+    SR_TRIGGER_EDGE,
 };
 
 static const uint64_t samplerates[] = {
@@ -420,6 +429,9 @@ static int config_list(uint32_t key, GVariant **data,
 	case SR_CONF_SAMPLERATE:
 		*data = std_gvar_samplerates_steps(ARRAY_AND_SIZE(samplerates));
 		break;
+    case SR_CONF_TRIGGER_MATCH:
+        *data = std_gvar_array_i32(ARRAY_AND_SIZE(trigger_matches));
+        break;
     case SR_CONF_DATA_SOURCE:
         *data = g_variant_new_strv(ARRAY_AND_SIZE(acquisition_modes));
         break;
@@ -456,6 +468,18 @@ static int dev_acquisition_start(const struct sr_dev_inst *sdi)
 	/* Properly reset internal variables before every new acquisition. */
 	devc->samples_sent = 0;
 	devc->bytes_received = 0;
+
+    struct sr_trigger *trigger;
+    if ((trigger = sr_session_trigger_get(sdi->session))) {
+        int pre_trigger_samples = 0;
+        if (devc->limit_samples > 0)
+            pre_trigger_samples = (devc->capture_ratio * devc->limit_samples) / 100;
+        devc->stl = soft_trigger_logic_new(sdi, trigger, pre_trigger_samples);
+        if (!devc->stl)
+            return SR_ERR_MALLOC;
+        devc->trigger_fired = FALSE;
+    } else
+        devc->trigger_fired = TRUE;
 
 	std_session_send_df_header(sdi);
 
