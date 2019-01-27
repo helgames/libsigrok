@@ -21,7 +21,7 @@
 #include <ftdi.h>
 #include "protocol.h"
 
-static void finish_acquisition(struct sr_dev_inst *sdi)
+SR_PRIV void finish_acquisition(struct sr_dev_inst *sdi)
 {
     struct dev_context *devc;
     devc = sdi->priv;
@@ -106,6 +106,7 @@ SR_PRIV int ftdi_la_receive_data(int fd, int revents, void *cb_data)
 		send_samples(sdi, devc->limit_samples - devc->samples_sent);
 		sr_info("Requested number of samples reached.");
 		sr_dev_acquisition_stop(sdi);
+        finish_acquisition(sdi);
 		return TRUE;
 	} else {
 		send_samples(sdi, devc->bytes_received);

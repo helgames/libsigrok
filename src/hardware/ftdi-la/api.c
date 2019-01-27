@@ -463,6 +463,7 @@ static int dev_acquisition_stop(struct sr_dev_inst *sdi)
 	sr_session_source_remove(sdi->session, -1);
 
 	std_session_send_df_end(sdi);
+    finish_acquisition(sdi);
 
 	return SR_OK;
 }
