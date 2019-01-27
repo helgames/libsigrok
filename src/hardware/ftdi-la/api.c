@@ -41,7 +41,8 @@ static const uint32_t devopts[] = {
 
 static const uint64_t samplerates[] = {
 	SR_HZ(3600),
-	SR_MHZ(10),
+    SR_MHZ(10),
+    SR_MHZ(15),
 	SR_HZ(1),
 };
 
