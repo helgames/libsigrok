@@ -474,6 +474,10 @@ static int dev_acquisition_start(const struct sr_dev_inst *sdi)
     }
 
     ftdi_la_set_samplerate(devc);
+    ftdi_set_latency_timer(devc->ftdic, 2)
+    ftdi_read_data_set_chunksize(devc->ftdic, 0x10000);
+    ftdi_write_data_set_chunksize(devc->ftdic, 0x10000);
+    ftdi_setflowctrl(devc->ftdic, SIO_DISABLE_FLOW_CTRL);
 
 	/* Properly reset internal variables before every new acquisition. */
 	devc->samples_sent = 0;
