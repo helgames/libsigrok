@@ -48,6 +48,7 @@ struct dev_context {
 	const struct ftdi_chip_desc *desc;
 
 	uint64_t limit_samples;
+    uint64_t capture_ratio;
 	uint32_t cur_samplerate;
 
 	unsigned char *data_buf;

@@ -37,6 +37,7 @@ static const uint32_t devopts[] = {
 	SR_CONF_LIMIT_SAMPLES | SR_CONF_SET,
 	SR_CONF_SAMPLERATE | SR_CONF_GET | SR_CONF_SET | SR_CONF_LIST,
 	SR_CONF_CONN | SR_CONF_GET,
+    SR_CONF_CAPTURE_RATIO | SR_CONF_GET | SR_CONF_SET,
     SR_CONF_DATA_SOURCE | SR_CONF_GET | SR_CONF_SET | SR_CONF_LIST,
 };
 
@@ -262,6 +263,7 @@ static int dev_open(struct sr_dev_inst *sdi)
 	int ret = SR_OK;
 
 	devc = sdi->priv;
+    devc->capture_ratio = 0;
 
 	devc->ftdic = ftdi_new();
 	if (!devc->ftdic)
@@ -347,6 +349,9 @@ static int config_get(uint32_t key, GVariant **data,
     case SR_CONF_DATA_SOURCE:
         *data = g_variant_new_string(acquisition_modes[devc->mode]);
         break;
+    case SR_CONF_CAPTURE_RATIO:
+        *data = g_variant_new_uint64(devc->capture_ratio);
+        break;
 	default:
 		return SR_ERR_NA;
 	}
@@ -394,6 +399,9 @@ static int config_set(uint32_t key, GVariant *data,
             sr_err("Unknown acquisition mode: '%s'.", tmp_str);
             return SR_ERR;
         }
+        break;
+    case SR_CONF_CAPTURE_RATIO:
+        devc->capture_ratio = g_variant_get_uint64(data);
         break;
 	default:
 		return SR_ERR_NA;
