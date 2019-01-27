@@ -21,6 +21,16 @@
 #include <ftdi.h>
 #include "protocol.h"
 
+static void finish_acquisition(struct sr_dev_inst *sdi)
+{
+    struct dev_context *devc;
+    devc = sdi->priv;
+    if (devc->stl) {
+        soft_trigger_logic_free(devc->stl);
+        devc->stl = NULL;
+    }
+}
+
 static void send_samples(struct sr_dev_inst *sdi, uint64_t samples_to_send)
 {
 	struct sr_datafeed_packet packet;
