@@ -27,7 +27,7 @@
 
 #define LOG_PREFIX "ftdi-la"
 
-#define DATA_BUF_SIZE (16 * 1024)
+#define DATA_BUF_SIZE (64 * 1024)
 
 struct ftdi_chip_desc {
 	uint16_t vendor;
