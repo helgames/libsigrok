@@ -58,10 +58,17 @@ static const int32_t trigger_matches[] = {
 };
 
 static const uint64_t samplerates[] = {
+    SR_HZ(1),
 	SR_HZ(3600),
+    SR_KHZ(100),
+    SR_KHZ(200),
+    SR_KHZ(500),
+    SR_MHZ(1),
+    SR_MHZ(2),
+    SR_MHZ(5),
     SR_MHZ(10),
     SR_MHZ(15),
-	SR_HZ(1),
+    SR_MHZ(30),
 };
 
 static const struct ftdi_chip_desc ft2232h_desc = {
