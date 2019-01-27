@@ -459,12 +459,11 @@ static int dev_acquisition_start(const struct sr_dev_inst *sdi)
 	if (!devc->ftdic)
 		return SR_ERR_BUG;
 
+    ftdi_set_bitmode(devc->ftdic, 0x00, BITMODE_RESET);
+
     switch (devc->mode) {
     case ACQUISITION_MODE_BB:
         ftdi_set_bitmode(devc->ftdic, 0x00, BITMODE_BITBANG);
-        break;
-    case ACQUISITION_MODE_ASYNC_FF:
-        ftdi_set_bitmode(devc->ftdic, 0x00, BITMODE_RESET);
         break;
     case ACQUISITION_MODE_SYNC_FF:
         ftdi_set_bitmode(devc->ftdic, 0x00, BITMODE_SYNCFF);
