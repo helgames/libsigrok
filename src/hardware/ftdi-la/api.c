@@ -280,7 +280,8 @@ static int dev_open(struct sr_dev_inst *sdi)
 	int ret = SR_OK;
 
 	devc = sdi->priv;
-    devc->capture_ratio = 0;
+    devc->capture_ratio = 1;
+    devc->cur_samplerate = SR_MHZ(10);
 
 	devc->ftdic = ftdi_new();
 	if (!devc->ftdic)
